@@ -1,4 +1,22 @@
 export type Role = "learning_manager" | "employee";
+export type SkillProficiencyLevel =
+  | "General"
+  | "Beginner"
+  | "Beginner + Intermediate"
+  | "Intermediate"
+  | "Advanced";
+export type EmployeeLanguage =
+  | "English"
+  | "German"
+  | "Spanish"
+  | "French"
+  | "Portuguese"
+  | "Japanese"
+  | "Mandarin"
+  | "Dutch"
+  | "Polish"
+  | "Italian"
+  | "Turkish";
 
 export type User = {
   id: string;
@@ -10,6 +28,8 @@ export type User = {
   job_title: string;
   market: string;
   proficiency_level?: string | null;
+  skill_proficiency_levels?: SkillProficiencyLevel[] | null;
+  spoken_languages?: EmployeeLanguage[] | null;
   created_at: string;
 };
 
@@ -24,6 +44,24 @@ export type Campaign = {
   end_date: string;
   created_by: string;
   created_at?: string;
+};
+
+export type CampaignFormValues = {
+  name: string;
+  description: string;
+  target_role: string;
+  target_market: string;
+  campaign_type: "Exhaustive" | "Tailored";
+  industry_type: string;
+  target_levels: string[];
+  target_languages: EmployeeLanguage[];
+  skill_targets: Array<{
+    skill_name: string;
+    proficiency: SkillProficiencyLevel;
+  }>;
+  status: Campaign["status"];
+  start_date: string;
+  end_date: string;
 };
 
 export type Skill = {

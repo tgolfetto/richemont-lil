@@ -9,6 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        primary: "#004165",
+        surface: "#F5F5F4",
+        footer: "#B9C9D0",
         gold: {
           DEFAULT: "#B4975A",
           50: "#faf7f0",
@@ -21,6 +24,9 @@ const config: Config = {
           700: "#7a5f30",
           800: "#55411f",
           900: "#30240f"
+        },
+        zinc: {
+          950: "#515454"
         }
       },
       boxShadow: {
@@ -32,8 +38,9 @@ const config: Config = {
           "radial-gradient(circle at top left, rgba(180,151,90,0.14), transparent 28%), radial-gradient(circle at top right, rgba(180,151,90,0.08), transparent 22%)"
       },
       fontFamily: {
-        display: ["var(--font-display)", "serif"],
-        sans: ["var(--font-sans)", "sans-serif"]
+        display: ["var(--font-sabon)", "serif"],
+        sans: ["var(--font-sabon)", "serif"],
+        button: ["var(--font-open-sans)", "sans-serif"]
       }
     }
   },
@@ -41,4 +48,3 @@ const config: Config = {
 };
 
 export default config;
-

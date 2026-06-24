@@ -4,6 +4,10 @@
 
 :root {
   color-scheme: light;
+  --color-primary: #004165;
+  --color-text: rgb(81, 84, 84);
+  --color-surface: #F5F5F4;
+  --color-footer: #B9C9D0;
 }
 
 html {
@@ -11,7 +15,32 @@ html {
 }
 
 body {
-  @apply bg-white text-zinc-950;
+  @apply bg-white;
+  color: var(--color-text);
+  font-family: var(--font-sabon), serif;
+}
+
+button {
+  border: 1px solid var(--color-primary);
+  background-color: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-open-sans), sans-serif;
+  border-radius: 0;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+button:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 * {
@@ -19,7 +48,7 @@ body {
 }
 
 ::selection {
-  background: rgba(180, 151, 90, 0.22);
+  background: rgba(0, 65, 101, 0.2);
   color: #111827;
 }
 
@@ -29,4 +58,3 @@ body {
     linear-gradient(90deg, rgba(181, 155, 96, 0.06) 1px, transparent 1px);
   background-size: 36px 36px;
 }
-

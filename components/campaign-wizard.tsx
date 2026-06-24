@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { campaignWizardOptions } from "@/lib/mock-data";
-import { Check, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const stepTitles = ["Campaign details", "Target audience", "Learning objectives"];
@@ -16,10 +15,13 @@ type WizardState = {
   description: string;
   startDate: string;
   endDate: string;
+  campaignType: string;
+  industryType: string;
   markets: string[];
   roles: string[];
   levels: string[];
   languages: string[];
+  skillProficiencyLevels: string[];
   skills: string[];
 };
 
@@ -29,10 +31,13 @@ const initialState: WizardState = {
     "A luxury retail capability journey focused on leadership presence, accountability, and coaching.",
   startDate: "2026-02-01",
   endDate: "2026-12-31",
-  markets: ["Singapore", "Malaysia"],
-  roles: ["Boutique Manager"],
-  levels: ["Manager"],
+  campaignType: "Tailored",
+  industryType: "Jewellery",
+  markets: ["APAC", "Singapore", "Malaysia"],
+  roles: ["Boutique Management · Store Manager", "Client Advisors · Client Advisor"],
+  levels: ["Manager", "Senior Manager"],
   languages: ["English"],
+  skillProficiencyLevels: ["Intermediate", "Advanced"],
   skills: ["Accountability & Ownership", "Goal Setting", "Leadership"]
 };
 
@@ -48,7 +53,10 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
   const [form, setForm] = useState<WizardState>(initialState);
   const activeStep = useMemo(() => stepTitles[step], [step]);
 
-  function toggleMulti(selectKey: keyof Pick<WizardState, "markets" | "roles" | "levels" | "languages" | "skills">, value: string) {
+  function toggleMulti(
+    selectKey: keyof Pick<WizardState, "markets" | "roles" | "levels" | "languages" | "skillProficiencyLevels" | "skills">,
+    value: string
+  ) {
     setForm((current) => {
       const list = current[selectKey];
       const exists = list.includes(value);
@@ -95,55 +103,56 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="border-b border-zinc-100 bg-gradient-to-r from-gold-50 to-white">
+    <Card className="overflow-hidden rounded-none">
+      <CardHeader className="border-b border-zinc-200 bg-surface">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle className="font-display text-3xl">Create Campaign</CardTitle>
+            <CardTitle className="font-display text-3xl font-light">Create Campaign</CardTitle>
             <CardDescription className="max-w-2xl">
-              Multi-step wizard for digitizing the Excel-based learning mapping process.
+              Configure campaign type, industry, hierarchical markets, role clusters, and employee levels.
             </CardDescription>
           </div>
-          <div className="hidden items-center gap-2 rounded-full border border-gold-200 bg-white px-4 py-2 text-sm text-gold-700 md:flex">
-            <Sparkles className="h-4 w-4" />
+          <div className="hidden items-center rounded-none border border-zinc-200 bg-white px-4 py-2 text-sm text-[color:var(--color-text)] md:flex">
             {activeStep}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-8 pt-6">
-        <div className="grid gap-3 md:grid-cols-3">
+      <CardContent className="space-y-6 pt-5">
+        <div className="grid gap-2.5 md:grid-cols-3">
           {stepTitles.map((title, index) => {
             const current = index === step;
             const complete = index < step;
             return (
               <div
                 key={title}
-                className={`rounded-[1.35rem] border px-4 py-4 ${
-                  current ? "border-zinc-950 bg-zinc-950 text-white" : complete ? "border-gold-200 bg-gold-50" : "border-zinc-200 bg-white"
+                className={`rounded-none border px-4 py-3 ${
+                  current
+                    ? "border-primary bg-primary text-white"
+                    : complete
+                      ? "border-zinc-200 bg-footer"
+                      : "border-zinc-200 bg-white"
                 }`}
               >
-                <p className={`text-xs uppercase tracking-[0.24em] ${current ? "text-gold-300" : "text-zinc-500"}`}>
-                  Step {index + 1}
-                </p>
-                <p className="mt-2 font-medium">{title}</p>
+                <p className={`text-xs ${current ? "text-white/80" : "text-zinc-500"}`}>Step {index + 1}</p>
+                <p className="mt-1 text-sm font-medium">{title}</p>
               </div>
             );
           })}
         </div>
 
         {step === 0 ? (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             <div>
-              <Label htmlFor="campaignName">Campaign Name</Label>
+              <Label htmlFor="campaignName">Campaign name</Label>
               <Input
                 id="campaignName"
                 value={form.campaignName}
                 onChange={(event) => setForm({ ...form, campaignName: event.target.value })}
               />
             </div>
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2">
               <div>
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="startDate">Start date</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -152,7 +161,7 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="endDate">End Date</Label>
+                <Label htmlFor="endDate">End date</Label>
                 <Input
                   id="endDate"
                   type="date"
@@ -161,6 +170,39 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
                 />
               </div>
             </div>
+
+            <div>
+              <Label htmlFor="campaignType">Campaign type</Label>
+              <select
+                id="campaignType"
+                value={form.campaignType}
+                onChange={(event) => setForm({ ...form, campaignType: event.target.value })}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
+              >
+                {campaignWizardOptions.campaignTypes.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="industryType">Industry type</Label>
+              <select
+                id="industryType"
+                value={form.industryType}
+                onChange={(event) => setForm({ ...form, industryType: event.target.value })}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
+              >
+                {campaignWizardOptions.industries.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="lg:col-span-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -173,60 +215,158 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
         ) : null}
 
         {step === 1 ? (
-          <div className="grid gap-6 lg:grid-cols-2">
-            {[
-              {
-                title: "Markets",
-                values: campaignWizardOptions.markets,
-                key: "markets" as const
-              },
-              {
-                title: "Roles",
-                values: campaignWizardOptions.roles,
-                key: "roles" as const
-              },
-              {
-                title: "Employee Level",
-                values: campaignWizardOptions.levels,
-                key: "levels" as const
-              },
-              {
-                title: "Language",
-                values: campaignWizardOptions.languages,
-                key: "languages" as const
-              }
-            ].map((group) => (
-              <div key={group.title} className="rounded-[1.5rem] border border-zinc-200 p-5">
-                <p className="text-sm font-semibold text-zinc-950">{group.title}</p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {group.values.map((value) => {
-                    const checked = form[group.key].includes(value);
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => toggleMulti(group.key, value)}
-                        className={`rounded-full border px-4 py-2 text-sm transition ${
-                          checked
-                            ? "border-zinc-950 bg-zinc-950 text-white"
-                            : "border-zinc-200 bg-white text-zinc-700 hover:border-gold-300 hover:bg-gold-50"
-                        }`}
-                      >
-                        {value}
-                      </button>
-                    );
-                  })}
-                </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="rounded-none border border-zinc-200 p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Markets</p>
+              <div className="mt-3 space-y-4">
+                {campaignWizardOptions.marketHierarchy.map((group) => (
+                  <div key={group.group}>
+                    <button
+                      type="button"
+                      onClick={() => toggleMulti("markets", group.group)}
+                      className={`mr-2 rounded-none border px-3 py-1 text-xs ${
+                        form.markets.includes(group.group)
+                          ? "border-primary bg-primary text-white"
+                          : "border-zinc-300 bg-white text-[color:var(--color-text)]"
+                      }`}
+                    >
+                      {group.group}
+                    </button>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {group.markets.map((market) => (
+                        <button
+                          key={market}
+                          type="button"
+                          onClick={() => toggleMulti("markets", market)}
+                          className={`rounded-none border px-3 py-1 text-xs ${
+                            form.markets.includes(market)
+                              ? "border-primary bg-primary text-white"
+                              : "border-zinc-300 bg-white text-[color:var(--color-text)]"
+                          }`}
+                        >
+                          {market}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div className="rounded-none border border-zinc-200 p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Roles (hierarchical)</p>
+              <div className="mt-3 space-y-4">
+                {campaignWizardOptions.roleHierarchy.map((roleGroup) => (
+                  <div key={roleGroup.group}>
+                    <p className="text-xs text-zinc-600">{roleGroup.group}</p>
+                    <div className="mt-2 space-y-2">
+                      {roleGroup.categories.map((category) => (
+                        <div key={category.name}>
+                          <p className="text-xs text-zinc-500">{category.name}</p>
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            {category.roles.map((role) => {
+                              const value = `${category.name} · ${role}`;
+                              const checked = form.roles.includes(value);
+                              return (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  onClick={() => toggleMulti("roles", value)}
+                                  className={`rounded-none border px-3 py-1 text-xs ${
+                                    checked
+                                      ? "border-primary bg-primary text-white"
+                                      : "border-zinc-300 bg-white text-[color:var(--color-text)]"
+                                  }`}
+                                >
+                                  {role}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-none border border-zinc-200 p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Employee levels</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {campaignWizardOptions.levels.map((value) => {
+                  const checked = form.levels.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => toggleMulti("levels", value)}
+                      className={`rounded-none border px-3 py-1 text-xs ${
+                        checked
+                          ? "border-primary bg-primary text-white"
+                          : "border-zinc-300 bg-white text-[color:var(--color-text)]"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-none border border-zinc-200 p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Languages</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {campaignWizardOptions.languages.map((value) => {
+                  const checked = form.languages.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => toggleMulti("languages", value)}
+                      className={`rounded-none border px-3 py-1 text-xs ${
+                        checked
+                          ? "border-primary bg-primary text-white"
+                          : "border-zinc-300 bg-white text-[color:var(--color-text)]"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-none border border-zinc-200 p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Skill proficiency targets</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {campaignWizardOptions.skillProficiencyLevels.map((value) => {
+                  const checked = form.skillProficiencyLevels.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => toggleMulti("skillProficiencyLevels", value)}
+                      className={`rounded-none border px-3 py-1 text-xs ${
+                        checked
+                          ? "border-primary bg-primary text-white"
+                          : "border-zinc-300 bg-white text-[color:var(--color-text)]"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         ) : null}
 
         {step === 2 ? (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-zinc-200 p-5">
-              <p className="text-sm font-semibold text-zinc-950">Learning Objectives</p>
-              <div className="mt-4 flex flex-wrap gap-3">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="rounded-none border border-zinc-200 p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Learning objectives</p>
+              <div className="mt-3 flex flex-wrap gap-2">
                 {(skillOptions.length > 0 ? skillOptions : campaignWizardOptions.skills).map((skill) => {
                   const checked = form.skills.includes(skill);
                   return (
@@ -234,13 +374,12 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
                       key={skill}
                       type="button"
                       onClick={() => toggleMulti("skills", skill)}
-                      className={`rounded-full border px-4 py-2 text-sm transition ${
+                      className={`rounded-none border px-3 py-1 text-xs ${
                         checked
-                          ? "border-gold-500 bg-gold-500 text-white"
-                          : "border-zinc-200 bg-white text-zinc-700 hover:border-gold-300 hover:bg-gold-50"
+                          ? "border-primary bg-primary text-white"
+                          : "border-zinc-300 bg-white text-[color:var(--color-text)]"
                       }`}
                     >
-                      {checked ? <Check className="mr-2 inline h-4 w-4" /> : null}
                       {skill}
                     </button>
                   );
@@ -248,20 +387,32 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-5">
-              <p className="text-sm font-semibold text-zinc-950">Review</p>
-              <div className="mt-4 space-y-3 text-sm text-zinc-600">
+            <div className="rounded-none border border-zinc-200 bg-surface p-4">
+              <p className="text-sm font-medium text-[color:var(--color-text)]">Review</p>
+              <div className="mt-3 space-y-2 text-xs text-zinc-600">
                 <p>
-                  <span className="font-medium text-zinc-950">Campaign:</span> {form.campaignName}
+                  <span className="font-medium text-[color:var(--color-text)]">Campaign:</span> {form.campaignName}
                 </p>
                 <p>
-                  <span className="font-medium text-zinc-950">Markets:</span> {form.markets.join(", ")}
+                  <span className="font-medium text-[color:var(--color-text)]">Type:</span> {form.campaignType}
                 </p>
                 <p>
-                  <span className="font-medium text-zinc-950">Roles:</span> {form.roles.join(", ")}
+                  <span className="font-medium text-[color:var(--color-text)]">Industry:</span> {form.industryType}
                 </p>
                 <p>
-                  <span className="font-medium text-zinc-950">Skills:</span> {form.skills.join(", ")}
+                  <span className="font-medium text-[color:var(--color-text)]">Markets:</span> {form.markets.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium text-[color:var(--color-text)]">Roles:</span> {form.roles.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium text-[color:var(--color-text)]">Employee Levels:</span> {form.levels.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium text-[color:var(--color-text)]">Languages:</span> {form.languages.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium text-[color:var(--color-text)]">Skill Proficiency:</span> {form.skillProficiencyLevels.join(", ")}
                 </p>
               </div>
             </div>
@@ -269,7 +420,7 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
         ) : null}
 
         {saved ? (
-          <div className="rounded-[1.5rem] border border-gold-200 bg-gold-50 px-5 py-4 text-sm text-gold-800">
+          <div className="rounded-none border border-zinc-300 bg-footer px-4 py-3 text-sm text-[color:var(--color-text)]">
             {saveSource === "supabase"
               ? "Campaign saved to Supabase."
               : "Campaign draft saved locally. In a connected environment this would persist to Supabase."}
@@ -283,12 +434,10 @@ export function CampaignWizard({ skillOptions }: CampaignWizardProps) {
             onClick={() => setStep((value) => Math.max(value - 1, 0))}
             disabled={step === 0}
           >
-            <ChevronLeft className="h-4 w-4" />
             Back
           </Button>
-          <Button type="button" variant="gold" onClick={() => void nextStep()} disabled={saving}>
+          <Button type="button" variant="secondary" onClick={() => void nextStep()} disabled={saving}>
             {saving ? "Saving..." : step === 2 ? "Save Campaign" : "Continue"}
-            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>

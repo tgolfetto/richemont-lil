@@ -54,7 +54,7 @@ export const mockSkills: Skill[] = [
   }
 ];
 
-export const mockCourses: Course[] = [
+const baseMockCourses: Course[] = [
   {
     id: "41111111-1111-4111-8111-111111111111",
     title: "Holding Your Team Accountable",
@@ -101,6 +101,47 @@ export const mockCourses: Course[] = [
     skill_id: mockSkills[4].id
   }
 ];
+
+const generatedCourseTitles = [
+  "Foundations",
+  "Practical Toolkit",
+  "Applied Scenarios",
+  "Manager Playbook",
+  "Advanced Practice",
+  "Cross-functional Collaboration",
+  "Performance Coaching",
+  "Execution Masterclass",
+  "Capstone Project"
+];
+
+const generatedCourseLevels = [
+  "Beginner",
+  "Beginner",
+  "Intermediate",
+  "Intermediate",
+  "Advanced",
+  "Intermediate",
+  "Advanced",
+  "Advanced",
+  "Intermediate"
+];
+
+const generatedMockCourses: Course[] = mockSkills.flatMap((skill, skillIndex) =>
+  Array.from({ length: 9 }, (_, offset) => {
+    const titleSuffix = generatedCourseTitles[offset];
+    const level = generatedCourseLevels[offset];
+    return {
+      id: `mock-course-${skillIndex + 1}-${offset + 1}`,
+      title: `${skill.skill_name}: ${titleSuffix}`,
+      level,
+      short_description: `Extended catalog course for ${skill.skill_name} focused on ${titleSuffix.toLowerCase()}.`,
+      linkedin_url: `https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill.skill_name)}`,
+      skill_id: skill.id
+    };
+  })
+);
+
+export const mockCourses: Course[] = [...baseMockCourses, ...generatedMockCourses];
 
 export const mockCampaigns: Campaign[] = [
   {
@@ -218,10 +259,70 @@ export const managerHighlights = [
 ];
 
 export const campaignWizardOptions = {
-  markets: ["Singapore", "Malaysia", "Thailand", "Australia"],
-  roles: ["Client Advisor", "Boutique Manager", "Marketing Executive"],
-  levels: ["Individual Contributor", "Manager", "Senior Manager"],
-  languages: ["English", "Mandarin"],
+  industries: [
+    "Jewellery",
+    "Watches",
+    "Fashion & Accessories",
+    "Online Distributors"
+  ],
+  campaignTypes: ["Exhaustive", "Tailored"],
+  marketHierarchy: [
+    {
+      group: "APAC",
+      markets: ["Singapore", "Malaysia", "Thailand", "Australia", "Hong Kong"]
+    },
+    {
+      group: "Europe",
+      markets: ["France", "Italy", "Switzerland", "United Kingdom"]
+    },
+    {
+      group: "Americas",
+      markets: ["United States", "Canada", "Mexico", "Brazil"]
+    }
+  ],
+  roleHierarchy: [
+    {
+      group: "Corporate/Office Employees",
+      categories: [
+        { name: "Management", roles: ["Legal", "Compliance", "Safety", "Health", "Real Estate"] },
+        { name: "Marketing & Communications", roles: ["Brand", "Digital Marketing", "PR", "VM"] },
+        { name: "Sales & Commercial", roles: ["Wholesale", "Business Development", "E-commerce"] },
+        { name: "Finance & Accounting", roles: ["Financial Analysis", "Accounting", "Brand Controls", "Treasury"] },
+        { name: "HR", roles: ["HR"] },
+        { name: "IT", roles: ["IT"] },
+        { name: "Supply Chain, Logistics, Procurement, QC", roles: ["Supply Chain", "Logistics", "Procurement", "QC"] },
+        { name: "CRC", roles: ["CRC"] }
+      ]
+    },
+    {
+      group: "Boutique/Retail Employees",
+      categories: [
+        { name: "Boutique Management", roles: ["Boutique Director", "Store Manager", "Assistant Manager"] },
+        { name: "Client Advisors", roles: ["Client Advisor", "Sales Associate"] }
+      ]
+    }
+  ],
+  levels: ["General", "Individual Contributor", "Manager", "Senior Manager", "C-Suite"],
+  languages: [
+    "English",
+    "German",
+    "Spanish",
+    "French",
+    "Portuguese",
+    "Japanese",
+    "Mandarin",
+    "Dutch",
+    "Polish",
+    "Italian",
+    "Turkish"
+  ],
+  skillProficiencyLevels: [
+    "General",
+    "Beginner",
+    "Beginner + Intermediate",
+    "Intermediate",
+    "Advanced"
+  ],
   skills: [
     "Accountability & Ownership",
     "Goal Setting",

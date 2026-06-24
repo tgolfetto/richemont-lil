@@ -29,7 +29,7 @@ const gold = "#B4975A";
 
 export function LearningActivityChart({ data }: { data: MonthlyDatum[] }) {
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
         <defs>
           <linearGradient id="goldStroke" x1="0" y1="0" x2="1" y2="0">
@@ -56,7 +56,7 @@ export function LearningActivityChart({ data }: { data: MonthlyDatum[] }) {
 
 export function MarketCompletionChart({ data }: { data: MarketDatum[] }) {
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
         <CartesianGrid strokeDasharray="4 4" stroke="#ece8de" vertical={false} />
         <XAxis dataKey="market" axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
@@ -78,3 +78,58 @@ export function MarketCompletionChart({ data }: { data: MarketDatum[] }) {
   );
 }
 
+type SkillProgressionDatum = {
+  month: string;
+  baseline: number;
+  current: number;
+};
+
+type SkillCoverageDatum = {
+  skill: string;
+  coverage: number;
+};
+
+export function SkillProgressionChart({ data }: { data: SkillProgressionDatum[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="4 4" stroke="#d9e3e8" vertical={false} />
+        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
+        <Tooltip
+          contentStyle={{
+            borderRadius: 0,
+            border: "1px solid #d2dde3",
+            backgroundColor: "rgba(255,255,255,0.98)"
+          }}
+        />
+        <Line type="monotone" dataKey="baseline" stroke="#6b7280" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="current" stroke="#004165" strokeWidth={3} dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function SkillCoverageChart({ data }: { data: SkillCoverageDatum[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="4 4" stroke="#d9e3e8" vertical={false} />
+        <XAxis dataKey="skill" axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 11 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
+        <Tooltip
+          contentStyle={{
+            borderRadius: 0,
+            border: "1px solid #d2dde3",
+            backgroundColor: "rgba(255,255,255,0.98)"
+          }}
+        />
+        <Bar dataKey="coverage" radius={[0, 0, 0, 0]}>
+          {data.map((entry) => (
+            <Cell key={entry.skill} fill="#004165" />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}

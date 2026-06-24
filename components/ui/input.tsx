@@ -5,11 +5,10 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "h-11 w-full rounded-full border border-zinc-200 bg-white px-4 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-gold-500 focus:ring-4 focus:ring-gold-100",
+        "h-11 w-full rounded-none border border-primary bg-transparent px-4 text-sm text-[color:var(--color-text)] outline-none transition placeholder:text-zinc-400 focus:bg-white focus:border-primary focus:ring-0",
         className
       )}
       {...props}
     />
   );
 }
-

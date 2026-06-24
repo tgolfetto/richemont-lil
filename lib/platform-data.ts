@@ -17,6 +17,7 @@ type ManagerCampaignRow = {
   market: string;
   audience: string;
   status: string;
+  campaignType: "Exhaustive" | "Tailored";
   progress: number;
 };
 
@@ -65,6 +66,20 @@ function calculateCampaignProgress(campaign: Campaign) {
   return clampPercentage(progress);
 }
 
+function getCampaignType(campaign: Campaign) {
+  const dbCampaign = campaign as Campaign & { campaign_type?: string | null };
+  if (dbCampaign.campaign_type === "Exhaustive" || dbCampaign.campaign_type === "Tailored") {
+    return dbCampaign.campaign_type;
+  }
+
+  const match = campaign.description.match(/Type:\s*(Exhaustive|Tailored)/i);
+  if (match?.[1]) {
+    return match[1].toLowerCase() === "exhaustive" ? "Exhaustive" : "Tailored";
+  }
+
+  return "Tailored";
+}
+
 function buildCampaignRows(campaigns: Campaign[]): ManagerCampaignRow[] {
   return [...campaigns]
     .sort((left, right) => right.start_date.localeCompare(left.start_date))
@@ -73,6 +88,7 @@ function buildCampaignRows(campaigns: Campaign[]): ManagerCampaignRow[] {
       market: campaign.target_market,
       audience: campaign.target_role,
       status: campaign.status,
+      campaignType: getCampaignType(campaign),
       progress: calculateCampaignProgress(campaign)
     }));
 }
@@ -294,6 +310,123 @@ export async function getCampaignListData() {
   }
 
   return [...live.campaigns].sort((left, right) => right.start_date.localeCompare(left.start_date));
+}
+
+export async function getCampaignListWithStats() {
+  const live = await fetchLiveData();
+  const campaigns = (live?.campaigns ?? mockCampaigns).sort((left, right) =>
+    right.start_date.localeCompare(left.start_date)
+  );
+  const users = live?.users ?? mockUsers;
+
+  return campaigns.map((campaign) => {
+    const inScopeUsers = users.filter((user) => {
+      if (user.role !== "employee") return false;
+      if (campaign.target_market === "APAC") return true;
+      return user.job_title === campaign.target_role || user.market === campaign.target_market;
+    });
+
+    return {
+      ...campaign,
+      employeeCount: inScopeUsers.length
+    };
+  });
+}
+
+export async function getCampaignById(campaignId: string) {
+  const live = await fetchLiveData();
+  const campaigns = live?.campaigns ?? mockCampaigns;
+  const courses = live?.courses ?? mockCourses;
+  const skills = live?.skills ?? mockSkills;
+  const campaign = campaigns.find((entry) => entry.id === campaignId);
+  if (!campaign) return null;
+
+  const users = live?.users ?? mockUsers;
+  const campaignsCount = campaigns.filter(
+    (entry) =>
+      entry.target_market === campaign.target_market || entry.target_role === campaign.target_role
+  ).length;
+  const relatedRecommendations =
+    live?.recommendations.filter((recommendation) => {
+      const user = users.find((entry) => entry.id === recommendation.user_id);
+      return user?.job_title === campaign.target_role || user?.market === campaign.target_market;
+    }) ?? mockRecommendations.filter((recommendation) => {
+      const user = mockUsers.find((entry) => entry.id === recommendation.user_id);
+      return user?.job_title === campaign.target_role || user?.market === campaign.target_market;
+    });
+
+  return {
+    campaign,
+    users,
+    courses,
+    skills,
+    campaignsCount,
+    relatedRecommendations,
+    createdBy: users.find((entry) => entry.id === campaign.created_by) ?? null
+  };
+}
+
+export function toCampaignFormValues(campaign: Campaign) {
+  const metadataValue = (label: string) => {
+    const match = campaign.description.match(new RegExp(`${label}:\\s*([^\\.]+)`, "i"));
+    return match?.[1]?.trim() ?? null;
+  };
+  const parseList = (label: string) => {
+    const value = metadataValue(label);
+    if (!value) return [] as string[];
+    return value.split(",").map((item) => item.trim()).filter(Boolean);
+  };
+  const coreDescription = campaign.description
+    .replace(/\s*Type:\s*[^.]+\./gi, "")
+    .replace(/\s*Industry:\s*[^.]+\./gi, "")
+    .replace(/\s*Employee levels:\s*[^.]+\./gi, "")
+    .replace(/\s*Languages:\s*[^.]+\./gi, "")
+    .replace(/\s*Skill proficiency:\s*[^.]+\./gi, "")
+    .replace(/\s*Focus skills:\s*[^.]+\./gi, "")
+    .replace(/\s*Skill matrix:\s*[^.]+\./gi, "")
+    .trim();
+
+  const skillTargetsFromMatrix = (() => {
+    const raw = metadataValue("Skill matrix");
+    if (!raw) return [] as Array<{ skill_name: string; proficiency: "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced" }>;
+    return raw
+      .split(";")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item) => {
+        const [skill_name, proficiency] = item.split("|").map((value) => value.trim());
+        if (!skill_name || !proficiency) return null;
+        if (!["General", "Beginner", "Beginner + Intermediate", "Intermediate", "Advanced"].includes(proficiency)) {
+          return null;
+        }
+        return {
+          skill_name,
+          proficiency: proficiency as "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced"
+        };
+      })
+      .filter((entry): entry is { skill_name: string; proficiency: "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced" } => Boolean(entry));
+  })();
+  const fallbackFocusSkills = parseList("Focus skills");
+
+  return {
+    name: campaign.name,
+    description: coreDescription || campaign.description,
+    target_role: campaign.target_role,
+    target_market: campaign.target_market,
+    campaign_type: (metadataValue("Type")?.toLowerCase() === "exhaustive" ? "Exhaustive" : "Tailored") as "Exhaustive" | "Tailored",
+    industry_type: metadataValue("Industry") ?? "Jewellery",
+    target_levels: parseList("Employee levels"),
+    target_languages: parseList("Languages") as Array<
+      "English" | "German" | "Spanish" | "French" | "Portuguese" | "Japanese" | "Mandarin" | "Dutch" | "Polish" | "Italian" | "Turkish"
+    >,
+    skill_targets:
+      skillTargetsFromMatrix.length > 0
+        ? skillTargetsFromMatrix
+        : fallbackFocusSkills.map((skill_name) => ({ skill_name, proficiency: "Intermediate" as const })),
+    status: campaign.status,
+    start_date: campaign.start_date,
+    end_date: campaign.end_date
+  };
 }
 
 export async function getRecommendationRows() {

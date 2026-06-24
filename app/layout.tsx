@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import localFont from "next/font/local";
+import { Open_Sans } from "next/font/google";
 import "./globals.css";
 
-const display = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-display"
+const sabon = localFont({
+  src: [
+    { path: "./fonts/Sabon.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/SabonItalic.ttf", weight: "400", style: "italic" },
+    { path: "./fonts/SabonBold.ttf", weight: "700", style: "normal" },
+    { path: "./fonts/SabonBoldItalic.ttf", weight: "700", style: "italic" }
+  ],
+  variable: "--font-sabon"
 });
 
-const sans = Manrope({
+const openSans = Open_Sans({
   subsets: ["latin"],
-  variable: "--font-sans"
+  variable: "--font-open-sans"
 });
 
 export const metadata: Metadata = {
@@ -25,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${sans.variable} font-sans antialiased`}>
+      <body className={`${sabon.variable} ${openSans.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

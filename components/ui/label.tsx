@@ -3,10 +3,6 @@ import type { LabelHTMLAttributes } from "react";
 
 export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
   return (
-    <label
-      className={cn("mb-2 block text-sm font-medium text-zinc-700", className)}
-      {...props}
-    />
+    <label className={cn("mb-2 block text-sm font-medium text-[color:var(--color-text)]", className)} {...props} />
   );
 }
-
