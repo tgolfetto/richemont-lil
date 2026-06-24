@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { campaignWizardOptions } from "@/lib/mock-data";
 import type { CampaignFormValues, SkillProficiencyLevel } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type CampaignFormProps = {
   campaign: CampaignFormValues;
@@ -30,6 +30,7 @@ export function CampaignForm({
 }: CampaignFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<CampaignFormValues>(initialCampaign);
+  const [step, setStep] = useState<1 | 2>(1);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,8 +61,7 @@ export function CampaignForm({
     .slice()
     .sort((left, right) => left.localeCompare(right));
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSaveCampaign() {
     setSaving(true);
     setError(null);
     setSaved(false);
@@ -176,209 +176,200 @@ export function CampaignForm({
         <p className="mt-1 text-sm text-zinc-500">{description}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3 md:col-span-2">
-            <Label htmlFor="name">Campaign name</Label>
-            <Input
-              id="name"
-              value={form.name}
-              onChange={(event) => updateField("name", event.target.value)}
-            />
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="target_role">Target role</Label>
-            <select
-              id="target_role"
-              value={form.target_role}
-              onChange={(event) => updateField("target_role", event.target.value)}
-              className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
-            >
-              {roleOptions.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="target_market">Target market</Label>
-            <select
-              id="target_market"
-              value={form.target_market}
-              onChange={(event) => updateField("target_market", event.target.value)}
-              className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
-            >
-              {marketOptions.map((market) => (
-                <option key={market} value={market}>
-                  {market}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="campaign_type">Campaign type</Label>
-            <select
-              id="campaign_type"
-              value={form.campaign_type}
-              onChange={(event) => updateField("campaign_type", event.target.value)}
-              className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
-            >
-              {campaignWizardOptions.campaignTypes.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="industry_type">Industry type</Label>
-            <select
-              id="industry_type"
-              value={form.industry_type}
-              onChange={(event) => updateField("industry_type", event.target.value)}
-              className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
-            >
-              {campaignWizardOptions.industries.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="status">Status</Label>
-            <select
-              id="status"
-              value={form.status}
-              disabled={readOnlyStatus}
-              onChange={(event) => updateField("status", event.target.value)}
-              className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none disabled:bg-zinc-50"
-            >
-              <option value="Draft">Draft</option>
-              <option value="Published">Published</option>
-              <option value="Archived">Archived</option>
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="start_date">Start date</Label>
-            <Input
-              id="start_date"
-              type="date"
-              value={form.start_date}
-              onChange={(event) => updateField("start_date", event.target.value)}
-            />
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3">
-            <Label htmlFor="end_date">End date</Label>
-            <Input
-              id="end_date"
-              type="date"
-              value={form.end_date}
-              onChange={(event) => updateField("end_date", event.target.value)}
-            />
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3 md:col-span-2">
-            <Label htmlFor="target_levels">Employee levels</Label>
-            <select
-              id="target_levels"
-              multiple
-              value={form.target_levels}
-              onChange={(event) => {
-                updateMulti(
-                  "target_levels",
-                  Array.from(event.target.selectedOptions).map((option) => option.value)
-                );
-              }}
-              className="min-h-24 w-full rounded-none border border-primary bg-white px-3 py-2 text-xs text-[color:var(--color-text)] outline-none"
-            >
-              {campaignWizardOptions.levels.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3 md:col-span-2">
-            <Label htmlFor="target_languages">Languages</Label>
-            <select
-              id="target_languages"
-              multiple
-              value={form.target_languages}
-              onChange={(event) => {
-                updateMulti(
-                  "target_languages",
-                  Array.from(event.target.selectedOptions).map((option) => option.value)
-                );
-              }}
-              className="min-h-24 w-full rounded-none border border-primary bg-white px-3 py-2 text-xs text-[color:var(--color-text)] outline-none"
-            >
-              {campaignWizardOptions.languages.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3 md:col-span-2 xl:col-span-4">
-            <div className="mb-2 flex items-center justify-between">
-              <Label>Skills and proficiency targets</Label>
-              <Button type="button" variant="secondary" size="sm" onClick={addSkillTarget}>
-                Add skill
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {form.skill_targets.map((target, index) => (
-                <div key={`${target.skill_name}-${index}`} className="grid gap-2 md:grid-cols-[1.8fr_1.2fr_auto]">
-                  <select
-                    value={target.skill_name}
-                    onChange={(event) => updateSkillTarget(index, "skill_name", event.target.value)}
-                    className="h-10 rounded-none border border-primary bg-white px-3 text-sm text-[color:var(--color-text)] outline-none"
-                  >
-                    {skillPool.map((skill) => (
-                      <option key={skill} value={skill}>
-                        {skill}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={target.proficiency}
-                    onChange={(event) => updateSkillTarget(index, "proficiency", event.target.value)}
-                    className="h-10 rounded-none border border-primary bg-white px-3 text-sm text-[color:var(--color-text)] outline-none"
-                  >
-                    {campaignWizardOptions.skillProficiencyLevels.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                  <Button type="button" variant="secondary" size="sm" onClick={() => removeSkillTarget(index)}>
-                    Remove
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-none border border-zinc-200 bg-white px-3 py-3 md:col-span-2 xl:col-span-4">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={form.description}
-              onChange={(event) => updateField("description", event.target.value)}
-            />
-          </div>
+      <form className="space-y-3">
+        <div className="rounded-none border border-zinc-200 bg-surface px-3 py-2 text-xs text-zinc-500">
+          Step {step} of 2 · {step === 1 ? "Campaign details" : "Skills and proficiency"}
         </div>
+
+        {step === 1 ? (
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <div className="space-y-2 rounded-none border border-zinc-200 bg-white px-3 py-3">
+              <p className="text-xs text-zinc-500">Campaign name and description</p>
+              <Label htmlFor="name">Campaign name</Label>
+              <Input
+                id="name"
+                value={form.name}
+                onChange={(event) => updateField("name", event.target.value)}
+              />
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={form.description}
+                onChange={(event) => updateField("description", event.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2 rounded-none border border-zinc-200 bg-white px-3 py-3">
+              <p className="text-xs text-zinc-500">Target industry, role, and employee level</p>
+              <Label htmlFor="industry_type">Industry type</Label>
+              <select
+                id="industry_type"
+                value={form.industry_type}
+                onChange={(event) => updateField("industry_type", event.target.value)}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
+              >
+                {campaignWizardOptions.industries.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+              <Label htmlFor="target_role">Target role</Label>
+              <select
+                id="target_role"
+                value={form.target_role}
+                onChange={(event) => updateField("target_role", event.target.value)}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
+              >
+                {roleOptions.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </select>
+              <Label htmlFor="target_levels">Employee levels</Label>
+              <select
+                id="target_levels"
+                multiple
+                value={form.target_levels}
+                onChange={(event) => {
+                  updateMulti(
+                    "target_levels",
+                    Array.from(event.target.selectedOptions).map((option) => option.value)
+                  );
+                }}
+                className="min-h-24 w-full rounded-none border border-primary bg-white px-3 py-2 text-xs text-[color:var(--color-text)] outline-none"
+              >
+                {campaignWizardOptions.levels.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2 rounded-none border border-zinc-200 bg-white px-3 py-3">
+              <p className="text-xs text-zinc-500">Market and languages</p>
+              <Label htmlFor="target_market">Target market</Label>
+              <select
+                id="target_market"
+                value={form.target_market}
+                onChange={(event) => updateField("target_market", event.target.value)}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
+              >
+                {marketOptions.map((market) => (
+                  <option key={market} value={market}>
+                    {market}
+                  </option>
+                ))}
+              </select>
+              <Label htmlFor="target_languages">Languages</Label>
+              <select
+                id="target_languages"
+                multiple
+                value={form.target_languages}
+                onChange={(event) => {
+                  updateMulti(
+                    "target_languages",
+                    Array.from(event.target.selectedOptions).map((option) => option.value)
+                  );
+                }}
+                className="min-h-24 w-full rounded-none border border-primary bg-white px-3 py-2 text-xs text-[color:var(--color-text)] outline-none"
+              >
+                {campaignWizardOptions.languages.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2 rounded-none border border-zinc-200 bg-white px-3 py-3">
+              <p className="text-xs text-zinc-500">Start/end date and status</p>
+              <Label htmlFor="campaign_type">Campaign type</Label>
+              <select
+                id="campaign_type"
+                value={form.campaign_type}
+                onChange={(event) => updateField("campaign_type", event.target.value)}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none"
+              >
+                {campaignWizardOptions.campaignTypes.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                value={form.status}
+                disabled={readOnlyStatus}
+                onChange={(event) => updateField("status", event.target.value)}
+                className="h-11 w-full rounded-none border border-primary bg-white px-4 text-sm text-[color:var(--color-text)] outline-none disabled:bg-zinc-50"
+              >
+                <option value="Draft">Draft</option>
+                <option value="Published">Published</option>
+                <option value="Archived">Archived</option>
+              </select>
+              <Label htmlFor="start_date">Start date</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={form.start_date}
+                onChange={(event) => updateField("start_date", event.target.value)}
+              />
+              <Label htmlFor="end_date">End date</Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={form.end_date}
+                onChange={(event) => updateField("end_date", event.target.value)}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-none border border-zinc-200 bg-white px-3 py-3 md:col-span-2 xl:col-span-4">
+              <div className="mb-2 flex items-center justify-between">
+                <Label>Skills and proficiency targets</Label>
+                <Button type="button" variant="secondary" size="sm" onClick={addSkillTarget}>
+                  Add skill
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {form.skill_targets.map((target, index) => (
+                  <div key={`${target.skill_name}-${index}`} className="grid gap-2 md:grid-cols-[1.8fr_1.2fr_auto]">
+                    <select
+                      value={target.skill_name}
+                      onChange={(event) => updateSkillTarget(index, "skill_name", event.target.value)}
+                      className="h-10 rounded-none border border-primary bg-white px-3 text-sm text-[color:var(--color-text)] outline-none"
+                    >
+                      {skillPool.map((skill) => (
+                        <option key={skill} value={skill}>
+                          {skill}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={target.proficiency}
+                      onChange={(event) => updateSkillTarget(index, "proficiency", event.target.value)}
+                      className="h-10 rounded-none border border-primary bg-white px-3 text-sm text-[color:var(--color-text)] outline-none"
+                    >
+                      {campaignWizardOptions.skillProficiencyLevels.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                    <Button type="button" variant="secondary" size="sm" onClick={() => removeSkillTarget(index)}>
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {error ? (
           <div className="rounded-none border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -406,9 +397,22 @@ export function CampaignForm({
               </Button>
             ) : null}
           </div>
-          <Button type="submit" variant="secondary" disabled={saving || deleting}>
-            {saving ? "Saving..." : submitLabel}
-          </Button>
+          <div className="flex items-center gap-2">
+            {step === 2 ? (
+              <Button type="button" variant="secondary" disabled={saving || deleting} onClick={() => setStep(1)}>
+                Back to details
+              </Button>
+            ) : null}
+            {step === 1 ? (
+              <Button type="button" variant="secondary" disabled={saving || deleting} onClick={() => setStep(2)}>
+                Next: skills
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" disabled={saving || deleting} onClick={handleSaveCampaign}>
+                {saving ? "Saving..." : submitLabel}
+              </Button>
+            )}
+          </div>
         </div>
       </form>
     </div>
