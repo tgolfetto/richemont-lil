@@ -75,7 +75,7 @@ export function AppShell({ user, children }: AppShellProps) {
                       className="h-7 w-auto object-contain"
                     />
                     <p className="mt-1 text-center text-[10px] uppercase tracking-[0.22em] text-zinc-500">
-                      Learning Recommendations
+                      Learning &amp; Development Platform
                     </p>
                   </div>
                 </Link>
