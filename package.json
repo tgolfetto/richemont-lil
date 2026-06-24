@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "NEXT_DIST_DIR=.next-dev next dev",
-    "build": "NEXT_DIST_DIR=.next-build next build",
-    "start": "NEXT_DIST_DIR=.next-build next start",
+    "build": "NEXT_DIST_DIR=.next next build",
+    "start": "NEXT_DIST_DIR=.next next start",
     "lint": "next lint",
     "generate:course-images": "node scripts/generate-course-mock-images.mjs"
   },
