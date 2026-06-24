@@ -146,7 +146,7 @@ export default async function ManagerDashboardPage() {
             <CardContent className="space-y-2 p-4 pt-3">
               {publishedCampaignRows.map((row) => (
                 <div
-                  key={row.name}
+                  key={row.id}
                   className="grid items-center gap-2 rounded-none border border-zinc-200 bg-white px-3 py-2.5 md:grid-cols-[1.8fr_auto_auto_auto_auto]"
                 >
                   <div>
@@ -161,7 +161,7 @@ export default async function ManagerDashboardPage() {
                   </Badge>
                   <p className="text-sm font-medium leading-none text-primary">{row.progress}% Completed</p>
                   <Link
-                    href="/manager/campaigns"
+                    href={`/manager/campaigns/${row.id}`}
                     className="inline-flex h-8 items-center rounded-none border border-primary bg-transparent px-3 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
                   >
                     View

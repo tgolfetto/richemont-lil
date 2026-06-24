@@ -13,6 +13,7 @@ import {
 import type { Campaign, Course, Recommendation, Skill, User } from "@/lib/types";
 
 type ManagerCampaignRow = {
+  id: string;
   name: string;
   market: string;
   audience: string;
@@ -86,6 +87,7 @@ function buildCampaignRows(campaigns: Campaign[]): ManagerCampaignRow[] {
   return [...campaigns]
     .sort((left, right) => right.start_date.localeCompare(left.start_date))
     .map((campaign) => ({
+      id: campaign.id,
       name: campaign.name,
       market: campaign.target_market,
       audience: campaign.target_role,
