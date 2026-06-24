@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-zinc-950;
+}
+
+* {
+  @apply border-zinc-200;
+}
+
+::selection {
+  background: rgba(180, 151, 90, 0.22);
+  color: #111827;
+}
+
+.luxury-grid {
+  background-image:
+    linear-gradient(rgba(181, 155, 96, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(181, 155, 96, 0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
