@@ -1,5 +1,35 @@
 create extension if not exists pgcrypto;
 
+create type if not exists public.employee_language_enum as enum (
+  'English',
+  'German',
+  'Spanish',
+  'French',
+  'Portuguese',
+  'Japanese',
+  'Mandarin',
+  'Dutch',
+  'Polish',
+  'Italian',
+  'Turkish'
+);
+
+create type if not exists public.skill_proficiency_enum as enum (
+  'General',
+  'Beginner',
+  'Beginner + Intermediate',
+  'Intermediate',
+  'Advanced'
+);
+
+create type if not exists public.employee_level_enum as enum (
+  'General',
+  'Individual Contributor',
+  'Manager',
+  'Senior Manager',
+  'C-Suite'
+);
+
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
@@ -10,6 +40,8 @@ create table if not exists public.users (
   job_title text not null,
   market text not null,
   proficiency_level text,
+  skill_proficiency_levels public.skill_proficiency_enum[] default '{}',
+  spoken_languages public.employee_language_enum[] default '{}',
   created_at timestamptz not null default now()
 );
 
@@ -25,6 +57,13 @@ create table if not exists public.campaigns (
   description text not null,
   target_role text not null,
   target_market text not null,
+  campaign_type text check (campaign_type in ('Exhaustive', 'Tailored') or campaign_type is null),
+  industry_type text,
+  target_levels public.employee_level_enum[] default '{}',
+  target_languages public.employee_language_enum[] default '{}',
+  skill_proficiency_levels public.skill_proficiency_enum[] default '{}',
+  focus_skills text[] default '{}',
+  skill_matrix text,
   status text not null check (status in ('Draft', 'Published', 'Archived')),
   start_date date not null,
   end_date date not null,
@@ -50,6 +89,8 @@ create table if not exists public.recommendations (
 );
 
 create index if not exists campaigns_created_by_idx on public.campaigns (created_by);
+create index if not exists campaigns_status_idx on public.campaigns (status);
+create index if not exists campaigns_campaign_type_idx on public.campaigns (campaign_type);
 create index if not exists courses_skill_id_idx on public.courses (skill_id);
 create index if not exists recommendations_user_id_idx on public.recommendations (user_id);
 create index if not exists recommendations_course_id_idx on public.recommendations (course_id);
