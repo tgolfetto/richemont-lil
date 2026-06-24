@@ -30,8 +30,8 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${sabon.variable} ${openSans.variable} font-sans antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning className={`${sabon.variable} ${openSans.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

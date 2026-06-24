@@ -5,9 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   BookOpenText,
-  CircleUserRound,
   LayoutDashboard,
-  Sparkles,
   Target
 } from "lucide-react";
 import Link from "next/link";
@@ -27,10 +25,8 @@ const managerNav: NavItem[] = [
 ];
 
 const employeeNav: NavItem[] = [
-  { href: "/employee/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/employee/dashboard#learning-path", label: "Learning Path", icon: BookOpenText },
-  { href: "/employee/dashboard#recommendations", label: "Recommendations", icon: Sparkles },
-  { href: "/employee/dashboard#profile", label: "Profile", icon: CircleUserRound }
+  { href: "/employee/dashboard", label: "Courses", icon: LayoutDashboard },
+  { href: "/employee/learning-path", label: "Learning Path", icon: BookOpenText }
 ];
 
 type AppShellProps = {

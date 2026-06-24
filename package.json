@@ -6,7 +6,8 @@
     "dev": "NEXT_DIST_DIR=.next-dev next dev",
     "build": "NEXT_DIST_DIR=.next-build next build",
     "start": "NEXT_DIST_DIR=.next-build next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate:course-images": "node scripts/generate-course-mock-images.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",

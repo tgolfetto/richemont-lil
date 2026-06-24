@@ -24,8 +24,10 @@ type ManagerCampaignRow = {
 type RecommendationRow = {
   id: string;
   status: Recommendation["status"];
+  campaign_name: string;
   user: Pick<User, "id" | "full_name" | "job_title" | "market">;
   course: Pick<Course, "id" | "title" | "short_description" | "level" | "linkedin_url"> & {
+    language: string;
     skill: Pick<Skill, "id" | "skill_name">;
   };
 };
@@ -169,6 +171,7 @@ function buildCompletionByMarket(users: User[], recommendations: Recommendation[
 
 function buildRecommendationRows(
   users: User[],
+  campaigns: Campaign[],
   courses: Course[],
   skills: Skill[],
   recommendations: Recommendation[]
@@ -176,38 +179,51 @@ function buildRecommendationRows(
   const userMap = new Map(users.map((user) => [user.id, user]));
   const courseMap = new Map(courses.map((course) => [course.id, course]));
   const skillMap = new Map(skills.map((skill) => [skill.id, skill]));
+  const rows: RecommendationRow[] = [];
 
-  return recommendations
-    .map((recommendation) => {
-      const user = userMap.get(recommendation.user_id);
-      const course = courseMap.get(recommendation.course_id);
-      if (!user || !course) return null;
-      const skill = skillMap.get(course.skill_id);
-      if (!skill) return null;
+  for (const recommendation of recommendations) {
+    const user = userMap.get(recommendation.user_id);
+    const course = courseMap.get(recommendation.course_id);
+    if (!user || !course) continue;
+    const skill = skillMap.get(course.skill_id);
+    if (!skill) continue;
 
-      return {
-        id: recommendation.id,
-        status: recommendation.status,
-        user: {
-          id: user.id,
-          full_name: user.full_name,
-          job_title: user.job_title,
-          market: user.market
-        },
-        course: {
-          id: course.id,
-          title: course.title,
-          short_description: course.short_description,
-          level: course.level,
-          linkedin_url: course.linkedin_url,
-          skill: {
-            id: skill.id,
-            skill_name: skill.skill_name
-          }
+    const matchingCampaign = campaigns
+      .filter(
+        (campaign) =>
+          campaign.target_role === user.job_title ||
+          campaign.target_market === user.market ||
+          campaign.target_market === "APAC"
+      )
+      .sort((left, right) => right.start_date.localeCompare(left.start_date))[0];
+    const language = user.spoken_languages?.[0] ?? "English";
+
+    rows.push({
+      id: recommendation.id,
+      status: recommendation.status,
+      campaign_name: matchingCampaign?.name ?? "Learning journey",
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        job_title: user.job_title,
+        market: user.market
+      },
+      course: {
+        id: course.id,
+        title: course.title,
+        short_description: course.short_description,
+        level: course.level,
+        language,
+        linkedin_url: course.linkedin_url,
+        skill: {
+          id: skill.id,
+          skill_name: skill.skill_name
         }
-      };
-    })
-    .filter((row): row is RecommendationRow => Boolean(row));
+      }
+    });
+  }
+
+  return rows;
 }
 
 function buildEmployeeJourney(
@@ -448,10 +464,10 @@ export function toCampaignFormValues(campaign: Campaign) {
 export async function getRecommendationRows() {
   const live = await fetchLiveData();
   if (!live) {
-    return buildRecommendationRows(mockUsers, mockCourses, mockSkills, mockRecommendations);
+    return buildRecommendationRows(mockUsers, mockCampaigns, mockCourses, mockSkills, mockRecommendations);
   }
 
-  return buildRecommendationRows(live.users, live.courses, live.skills, live.recommendations);
+  return buildRecommendationRows(live.users, live.campaigns, live.courses, live.skills, live.recommendations);
 }
 
 export async function getEmployeeDashboardData(userId?: string) {
@@ -481,7 +497,7 @@ export async function getEmployeeDashboardData(userId?: string) {
         activePath: "Retail Leadership Excellence 2026",
         skillMix: mockSkills.slice(0, 4).map((skill) => ({ name: skill.skill_name, value: 25 }))
       },
-      recommendations: buildRecommendationRows(source.users, source.courses, source.skills, source.recommendations),
+      recommendations: buildRecommendationRows(source.users, source.campaigns, source.courses, source.skills, source.recommendations),
       connectionStatus: hasSupabaseConnection ? "Connected to Supabase" : "Using local fallback"
     };
   }
@@ -493,7 +509,7 @@ export async function getEmployeeDashboardData(userId?: string) {
       proficiencyLevel: user.proficiency_level ?? "Intermediate"
     },
     journey,
-    recommendations: buildRecommendationRows(source.users, source.courses, source.skills, source.recommendations).filter(
+    recommendations: buildRecommendationRows(source.users, source.campaigns, source.courses, source.skills, source.recommendations).filter(
       (row) => row.user.id === user.id
     ),
     connectionStatus: hasSupabaseConnection ? "Connected to Supabase" : "Using local fallback"
