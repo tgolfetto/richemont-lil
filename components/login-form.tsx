@@ -7,17 +7,6 @@ import { roleRedirect } from "@/lib/routes";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-type LoginPreset = {
-  email: string;
-  password: string;
-  label: string;
-};
-
-const presets: LoginPreset[] = [
-  { email: "manager@richemont.com", password: "admin123", label: "Learning manager" },
-  { email: "employee@richemont.com", password: "employee123", label: "Employee" }
-];
-
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -54,11 +43,6 @@ export function LoginForm() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  function applyPreset(preset: LoginPreset) {
-    setEmail(preset.email);
-    setPassword(preset.password);
   }
 
   return (
@@ -111,24 +95,6 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <div className="text-sm text-[color:var(--color-text)]">
-        <span className="mr-2">Demo Account:</span>
-        <button
-          type="button"
-          onClick={() => applyPreset(presets[0])}
-          className="!border-0 !bg-transparent !p-0 text-sm underline underline-offset-4 transition-colors hover:!bg-transparent hover:!text-primary"
-        >
-          Learning Manager
-        </button>
-        <span className="mx-2">and</span>
-        <button
-          type="button"
-          onClick={() => applyPreset(presets[1])}
-          className="!border-0 !bg-transparent !p-0 text-sm underline underline-offset-4 transition-colors hover:!bg-transparent hover:!text-primary"
-        >
-          Employee
-        </button>
-      </div>
     </div>
   );
 }
