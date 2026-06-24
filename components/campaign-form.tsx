@@ -31,6 +31,7 @@ export function CampaignForm({
   const router = useRouter();
   const [form, setForm] = useState<CampaignFormValues>(initialCampaign);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -136,6 +137,36 @@ export function CampaignForm({
       ...current,
       skill_targets: current.skill_targets.filter((_, targetIndex) => targetIndex !== index)
     }));
+  }
+
+  async function handleDeleteCampaign() {
+    if (!campaignId) return;
+    const confirmed = window.confirm(
+      "Delete this campaign? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError(null);
+    setSaved(false);
+
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: "DELETE"
+      });
+      const payload = (await response.json()) as { success: boolean; message?: string };
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message ?? "Unable to delete campaign.");
+      }
+
+      router.refresh();
+      router.push("/manager/campaigns");
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete campaign.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -361,8 +392,21 @@ export function CampaignForm({
           </div>
         ) : null}
 
-        <div className="flex items-center justify-end gap-3">
-          <Button type="submit" variant="secondary" disabled={saving}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            {campaignId ? (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={saving || deleting}
+                onClick={handleDeleteCampaign}
+                className="border-red-700 text-red-700 hover:bg-red-700 hover:text-white"
+              >
+                {deleting ? "Deleting..." : "Delete campaign"}
+              </Button>
+            ) : null}
+          </div>
+          <Button type="submit" variant="secondary" disabled={saving || deleting}>
             {saving ? "Saving..." : submitLabel}
           </Button>
         </div>

@@ -376,6 +376,8 @@ export function toCampaignFormValues(campaign: Campaign) {
     if (!value) return [] as string[];
     return value.split(",").map((item) => item.trim()).filter(Boolean);
   };
+  const fromArray = (value?: string[] | null) => (Array.isArray(value) ? value.filter(Boolean) : []);
+  const dbSkillMatrix = typeof campaign.skill_matrix === "string" ? campaign.skill_matrix : null;
   const coreDescription = campaign.description
     .replace(/\s*Type:\s*[^.]+\./gi, "")
     .replace(/\s*Industry:\s*[^.]+\./gi, "")
@@ -387,7 +389,7 @@ export function toCampaignFormValues(campaign: Campaign) {
     .trim();
 
   const skillTargetsFromMatrix = (() => {
-    const raw = metadataValue("Skill matrix");
+    const raw = dbSkillMatrix ?? metadataValue("Skill matrix");
     if (!raw) return [] as Array<{ skill_name: string; proficiency: "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced" }>;
     return raw
       .split(";")
@@ -407,22 +409,36 @@ export function toCampaignFormValues(campaign: Campaign) {
       .filter((entry): entry is { skill_name: string; proficiency: "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced" } => Boolean(entry));
   })();
   const fallbackFocusSkills = parseList("Focus skills");
+  const dbCampaignType =
+    campaign.campaign_type === "Exhaustive" || campaign.campaign_type === "Tailored"
+      ? campaign.campaign_type
+      : null;
+  const dbIndustryType = typeof campaign.industry_type === "string" ? campaign.industry_type : null;
+  const dbTargetLevels = fromArray(campaign.target_levels);
+  const dbTargetLanguages = fromArray(campaign.target_languages as string[] | null | undefined);
+  const dbSkillProficiency = fromArray(campaign.skill_proficiency_levels as string[] | null | undefined);
+  const dbFocusSkills = fromArray(campaign.focus_skills);
 
   return {
     name: campaign.name,
     description: coreDescription || campaign.description,
     target_role: campaign.target_role,
     target_market: campaign.target_market,
-    campaign_type: (metadataValue("Type")?.toLowerCase() === "exhaustive" ? "Exhaustive" : "Tailored") as "Exhaustive" | "Tailored",
-    industry_type: metadataValue("Industry") ?? "Jewellery",
-    target_levels: parseList("Employee levels"),
-    target_languages: parseList("Languages") as Array<
+    campaign_type:
+      dbCampaignType ??
+      ((metadataValue("Type")?.toLowerCase() === "exhaustive" ? "Exhaustive" : "Tailored") as "Exhaustive" | "Tailored"),
+    industry_type: dbIndustryType ?? metadataValue("Industry") ?? "Jewellery",
+    target_levels: dbTargetLevels.length > 0 ? dbTargetLevels : parseList("Employee levels"),
+    target_languages: (dbTargetLanguages.length > 0 ? dbTargetLanguages : parseList("Languages")) as Array<
       "English" | "German" | "Spanish" | "French" | "Portuguese" | "Japanese" | "Mandarin" | "Dutch" | "Polish" | "Italian" | "Turkish"
     >,
     skill_targets:
       skillTargetsFromMatrix.length > 0
         ? skillTargetsFromMatrix
-        : fallbackFocusSkills.map((skill_name) => ({ skill_name, proficiency: "Intermediate" as const })),
+        : (dbFocusSkills.length > 0 ? dbFocusSkills : fallbackFocusSkills).map((skill_name) => ({
+            skill_name,
+            proficiency: (dbSkillProficiency[0] as "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced" | undefined) ?? "Intermediate"
+          })),
     status: campaign.status,
     start_date: campaign.start_date,
     end_date: campaign.end_date

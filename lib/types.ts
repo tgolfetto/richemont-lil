@@ -39,6 +39,13 @@ export type Campaign = {
   description: string;
   target_role: string;
   target_market: string;
+  campaign_type?: "Exhaustive" | "Tailored" | null;
+  industry_type?: string | null;
+  target_levels?: string[] | null;
+  target_languages?: EmployeeLanguage[] | null;
+  skill_proficiency_levels?: SkillProficiencyLevel[] | null;
+  focus_skills?: string[] | null;
+  skill_matrix?: string | null;
   status: "Draft" | "Published" | "Archived";
   start_date: string;
   end_date: string;

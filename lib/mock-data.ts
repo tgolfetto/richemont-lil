@@ -111,7 +111,12 @@ const generatedCourseTitles = [
   "Cross-functional Collaboration",
   "Performance Coaching",
   "Execution Masterclass",
-  "Capstone Project"
+  "Capstone Project",
+  "Scenario Labs",
+  "Strategic Alignment",
+  "Coaching Clinics",
+  "Operational Excellence",
+  "Transformation Studio"
 ];
 
 const generatedCourseLevels = [
@@ -123,16 +128,21 @@ const generatedCourseLevels = [
   "Intermediate",
   "Advanced",
   "Advanced",
-  "Intermediate"
+  "Intermediate",
+  "Beginner",
+  "Intermediate",
+  "Intermediate",
+  "Advanced",
+  "Advanced"
 ];
 
 const generatedMockCourses: Course[] = mockSkills.flatMap((skill, skillIndex) =>
-  Array.from({ length: 9 }, (_, offset) => {
-    const titleSuffix = generatedCourseTitles[offset];
-    const level = generatedCourseLevels[offset];
+  Array.from({ length: 24 }, (_, offset) => {
+    const titleSuffix = generatedCourseTitles[offset % generatedCourseTitles.length];
+    const level = generatedCourseLevels[offset % generatedCourseLevels.length];
     return {
       id: `mock-course-${skillIndex + 1}-${offset + 1}`,
-      title: `${skill.skill_name}: ${titleSuffix}`,
+      title: `${skill.skill_name}: ${titleSuffix} ${offset + 1}`,
       level,
       short_description: `Extended catalog course for ${skill.skill_name} focused on ${titleSuffix.toLowerCase()}.`,
       linkedin_url: `https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill.skill_name)}`,

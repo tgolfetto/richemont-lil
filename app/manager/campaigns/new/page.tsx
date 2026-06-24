@@ -1,6 +1,7 @@
 import { CampaignForm } from "@/components/campaign-form";
 import { getCampaignWizardSkills } from "@/lib/platform-data";
 import type { CampaignFormValues } from "@/lib/types";
+import Link from "next/link";
 
 export default async function NewCampaignPage() {
   const skills = await getCampaignWizardSkills();
@@ -23,13 +24,23 @@ export default async function NewCampaignPage() {
   };
 
   return (
-    <CampaignForm
-      campaign={initialCampaign}
-      title="Create campaign"
-      description="Use dropdown-driven targeting for all campaign properties, including skill proficiency by skill."
-      submitLabel="Create campaign"
-      readOnlyStatus={false}
-      skillOptions={skills.map((skill) => skill.skill_name)}
-    />
+    <div className="space-y-4">
+      <div>
+        <Link
+          href="/manager/campaigns"
+          className="inline-flex h-9 items-center rounded-none border border-primary bg-transparent px-4 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+        >
+          Back to campaigns
+        </Link>
+      </div>
+      <CampaignForm
+        campaign={initialCampaign}
+        title="Create campaign"
+        description="Use dropdown-driven targeting for all campaign properties, including skill proficiency by skill."
+        submitLabel="Create campaign"
+        readOnlyStatus={false}
+        skillOptions={skills.map((skill) => skill.skill_name)}
+      />
+    </div>
   );
 }

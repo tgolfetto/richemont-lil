@@ -186,7 +186,7 @@ export default async function ManagerDashboardPage() {
           </Card>
 
           <Card className="h-full rounded-none border border-zinc-200 bg-footer lg:col-span-2">
-            <CardContent className="flex h-full items-center justify-center gap-3 p-4 text-center">
+            <CardContent className="flex h-full items-center justify-center gap-3 px-4 py-0 text-center">
               <p className="text-sm font-medium text-[color:var(--color-text)]">
                 Launch a new campaign for the Singapore boutique leadership cohort.
               </p>

@@ -23,6 +23,18 @@ function parseList(description: string, label: string) {
     .filter(Boolean);
 }
 
+function stripMetadataFromDescription(input: string) {
+  return input
+    .replace(/\s*Type:\s*[^.]+\./gi, "")
+    .replace(/\s*Industry:\s*[^.]+\./gi, "")
+    .replace(/\s*Employee levels:\s*[^.]+\./gi, "")
+    .replace(/\s*Languages:\s*[^.]+\./gi, "")
+    .replace(/\s*Skill proficiency:\s*[^.]+\./gi, "")
+    .replace(/\s*Focus skills:\s*[^.]+\./gi, "")
+    .replace(/\s*Skill matrix:\s*[^.]+\./gi, "")
+    .trim();
+}
+
 type SkillTarget = {
   skill_name: string;
   proficiency: "General" | "Beginner" | "Beginner + Intermediate" | "Intermediate" | "Advanced";
@@ -91,8 +103,8 @@ function buildLanguageCourseList<T>(
     return courses.map((course, index) => ({ course, sequence: index + 1 }));
   }
   if (courses.length === 0) return [];
-  return Array.from({ length: targetCount }, (_, index) => ({
-    course: courses[index % courses.length],
+  return courses.slice(0, Math.min(targetCount, courses.length)).map((course, index) => ({
+    course,
     sequence: index + 1
   }));
 }
@@ -114,16 +126,34 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
     campaign.description,
     (campaign as { campaign_type?: string | null }).campaign_type
   );
-  const industry = metadataValue(campaign.description, "Industry") ?? "Jewellery";
+  const industry =
+    (campaign as { industry_type?: string | null }).industry_type ??
+    metadataValue(campaign.description, "Industry") ??
+    "Jewellery";
   const dbLanguages = (campaign as { target_languages?: string[] | null }).target_languages;
   const languages =
     Array.isArray(dbLanguages) && dbLanguages.length > 0
       ? dbLanguages
       : parseList(campaign.description, "Languages");
-  const levels = parseList(campaign.description, "Employee levels");
-  const skillProficiency = parseList(campaign.description, "Skill proficiency");
-  const explicitFocusSkills = parseList(campaign.description, "Focus skills");
-  const skillMatrix = parseSkillMatrix(campaign.description);
+  const dbLevels = (campaign as { target_levels?: string[] | null }).target_levels;
+  const levels = Array.isArray(dbLevels) && dbLevels.length > 0
+    ? dbLevels
+    : parseList(campaign.description, "Employee levels");
+  const dbSkillProficiency = (campaign as { skill_proficiency_levels?: string[] | null }).skill_proficiency_levels;
+  const skillProficiency =
+    Array.isArray(dbSkillProficiency) && dbSkillProficiency.length > 0
+      ? dbSkillProficiency
+      : parseList(campaign.description, "Skill proficiency");
+  const dbFocusSkills = (campaign as { focus_skills?: string[] | null }).focus_skills;
+  const explicitFocusSkills =
+    Array.isArray(dbFocusSkills) && dbFocusSkills.length > 0
+      ? dbFocusSkills
+      : parseList(campaign.description, "Focus skills");
+  const skillMatrix =
+    typeof (campaign as { skill_matrix?: string | null }).skill_matrix === "string"
+      ? parseSkillMatrix(`Skill matrix: ${(campaign as { skill_matrix?: string | null }).skill_matrix}.`)
+      : parseSkillMatrix(campaign.description);
+  const cleanDescription = stripMetadataFromDescription(campaign.description);
   const employeeCount = users.filter((user) => {
     if (user.role !== "employee") return false;
     if (campaign.target_market === "APAC") return true;
@@ -133,6 +163,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
 
   const courseMap = new Map(courses.map((course) => [course.id, course]));
   const skillMap = new Map(skills.map((skill) => [skill.id, skill]));
+  const userMap = new Map(users.map((user) => [user.id, user]));
   const recommendationStatsByCourse = relatedRecommendations.reduce((map, recommendation) => {
     const current = map.get(recommendation.course_id) ?? {
       assigned: 0,
@@ -145,6 +176,36 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
     map.set(recommendation.course_id, current);
     return map;
   }, new Map<string, { assigned: number; inProgress: number; completed: number }>());
+  const recommendationUsersByCourse = relatedRecommendations.reduce((map, recommendation) => {
+    const current = map.get(recommendation.course_id) ?? {
+      assigned: [] as Array<{ id: string; full_name: string; job_title: string; market: string }>,
+      inProgress: [] as Array<{ id: string; full_name: string; job_title: string; market: string }>,
+      completed: [] as Array<{ id: string; full_name: string; job_title: string; market: string }>
+    };
+    const user = userMap.get(recommendation.user_id);
+    if (!user) return map;
+    const userEntry = {
+      id: user.id,
+      full_name: user.full_name,
+      job_title: user.job_title,
+      market: user.market
+    };
+    if (recommendation.status === "Assigned" && !current.assigned.some((entry) => entry.id === userEntry.id)) {
+      current.assigned.push(userEntry);
+    }
+    if (recommendation.status === "In Progress" && !current.inProgress.some((entry) => entry.id === userEntry.id)) {
+      current.inProgress.push(userEntry);
+    }
+    if (recommendation.status === "Completed" && !current.completed.some((entry) => entry.id === userEntry.id)) {
+      current.completed.push(userEntry);
+    }
+    map.set(recommendation.course_id, current);
+    return map;
+  }, new Map<string, {
+    assigned: Array<{ id: string; full_name: string; job_title: string; market: string }>;
+    inProgress: Array<{ id: string; full_name: string; job_title: string; market: string }>;
+    completed: Array<{ id: string; full_name: string; job_title: string; market: string }>;
+  }>());
   const recommendationSkillNames = Array.from(
     new Set(
       relatedRecommendations
@@ -191,12 +252,14 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
           return {
             id: course.id,
             title: course.title,
-            level: course.level,
             linkedin_url: course.linkedin_url,
             sequence,
             assigned: stats.assigned,
             inProgress: stats.inProgress,
-            completed: stats.completed
+            completed: stats.completed,
+            assignedUsers: recommendationUsersByCourse.get(course.id)?.assigned ?? [],
+            inProgressUsers: recommendationUsersByCourse.get(course.id)?.inProgress ?? [],
+            completedUsers: recommendationUsersByCourse.get(course.id)?.completed ?? []
           };
         })
       };
@@ -211,23 +274,37 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
 
   return (
     <div className="space-y-5 font-sans">
+      <div>
+        <Link
+          href="/manager/campaigns"
+          className="inline-flex h-9 items-center rounded-none border border-primary bg-transparent px-4 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+        >
+          Back to campaigns
+        </Link>
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-light text-[color:var(--color-text)]">{campaign.name}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{campaign.description}</p>
+          <p className="mt-1 text-sm text-zinc-500">{cleanDescription}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/api/campaigns/${campaign.id}/export?type=details`}
+            className="inline-flex h-9 items-center rounded-none border border-primary bg-transparent px-4 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+          >
+            Export campaign details
+          </Link>
+          <Link
+            href={`/api/campaigns/${campaign.id}/export?type=users`}
+            className="inline-flex h-9 items-center rounded-none border border-primary bg-transparent px-4 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+          >
+            Export users list
+          </Link>
           <Link
             href={`/manager/campaigns/${campaign.id}/edit`}
             className="inline-flex h-9 items-center rounded-none border border-primary bg-transparent px-4 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
           >
             Edit campaign
-          </Link>
-          <Link
-            href="/manager/campaigns"
-            className="inline-flex h-9 items-center rounded-none border border-primary bg-transparent px-4 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white"
-          >
-            Back to campaigns
           </Link>
         </div>
       </div>
@@ -289,6 +366,8 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
           {recommendedCoursesBySkill.map((group) => (
             <CampaignSkillCourses
               key={group.skillName}
+              campaignId={campaign.id}
+              campaignName={campaign.name}
               skillName={group.skillName}
               proficiency={group.proficiency}
               byLanguage={group.byLanguage}

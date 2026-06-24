@@ -2,6 +2,26 @@ import { getSupabaseAdminClient } from "@/lib/supabase";
 import { getSessionUser } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 
+function stripMetadataFromDescription(input: string) {
+  return input
+    .replace(/\s*Type:\s*[^.]+\./gi, "")
+    .replace(/\s*Industry:\s*[^.]+\./gi, "")
+    .replace(/\s*Employee levels:\s*[^.]+\./gi, "")
+    .replace(/\s*Languages:\s*[^.]+\./gi, "")
+    .replace(/\s*Skill proficiency:\s*[^.]+\./gi, "")
+    .replace(/\s*Focus skills:\s*[^.]+\./gi, "")
+    .replace(/\s*Skill matrix:\s*[^.]+\./gi, "")
+    .trim();
+}
+
+function hasMissingColumnError(message?: string | null) {
+  if (!message) return false;
+  return (
+    message.includes("Could not find the '") &&
+    message.includes("' column of 'campaigns' in the schema cache")
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getSessionUser();
@@ -99,34 +119,44 @@ export async function POST(request: NextRequest) {
         ? effectiveSkillTargets.map((item) => `${item.skill_name}|${item.proficiency}`).join("; ")
         : null;
 
-    const metadataParts = [
-      campaign_type ?? campaignType ? `Type: ${campaign_type ?? campaignType}` : null,
-      industry_type ?? industryType ? `Industry: ${industry_type ?? industryType}` : null,
-      effectiveLevels.length > 0 ? `Employee levels: ${effectiveLevels.join(", ")}` : null,
-      effectiveLanguages.length > 0 ? `Languages: ${effectiveLanguages.join(", ")}` : null,
-      effectiveSkillProficiencyLevels.length > 0
-        ? `Skill proficiency: ${effectiveSkillProficiencyLevels.join(", ")}`
-        : null,
-      effectiveSkills.length > 0 ? `Focus skills: ${effectiveSkills.join(", ")}` : null,
-      skillMatrix ? `Skill matrix: ${skillMatrix}` : null
-    ].filter(Boolean);
-    const campaignDescription =
-      metadataParts.length > 0 ? `${description} ${metadataParts.join(". ")}.` : description;
+    const campaignDescription = stripMetadataFromDescription(description);
 
-    const { data, error } = await supabase
+    const basePayload = {
+      name: finalName,
+      description: campaignDescription,
+      target_role: finalTargetRole,
+      target_market: finalTargetMarket,
+      status: finalStatus,
+      start_date: finalStartDate,
+      end_date: finalEndDate,
+      created_by: session.id
+    };
+    const extendedPayload = {
+      ...basePayload,
+      campaign_type: campaign_type ?? campaignType ?? "Tailored",
+      industry_type: industry_type ?? industryType ?? "Jewellery",
+      target_levels: effectiveLevels,
+      target_languages: effectiveLanguages,
+      skill_proficiency_levels: effectiveSkillProficiencyLevels,
+      focus_skills: effectiveSkills,
+      skill_matrix: skillMatrix
+    };
+
+    let { data, error } = await supabase
       .from("campaigns")
-      .insert({
-        name: finalName,
-        description: campaignDescription,
-        target_role: finalTargetRole,
-        target_market: finalTargetMarket,
-        status: finalStatus,
-        start_date: finalStartDate,
-        end_date: finalEndDate,
-        created_by: session.id
-      })
+      .insert(extendedPayload)
       .select("*")
       .single();
+
+    if (error && hasMissingColumnError(error.message)) {
+      const fallback = await supabase
+        .from("campaigns")
+        .insert(basePayload)
+        .select("*")
+        .single();
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) {
       return NextResponse.json(
